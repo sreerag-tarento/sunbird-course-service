@@ -1182,5 +1182,7 @@ public final class JsonKey {
   public static final String EVENT_COMPLETION_PERCENTAGE="eventCompletionPercentage";
   public static final String ISSUE_EVENT_CERTIFICATE = "issue-event-certificate";
   public static final String PROGRAM_CATEGORIES = "program_categories";
+  public static final String REISSUE_DATE = "reIssueDate";
+  public static final String INVALID_DATE_TIME = "Invalid date/time format. Expected format: yyyy-MM-dd HH:mm:ss";
   private JsonKey() {}
 }
