@@ -1250,7 +1250,6 @@ public final class JsonKey {
   public static final String MULTILINGUAL_COURSE_SWITCH_LOG = "Multilingual course detected. Switching contentId to base language contentId= ";
   public static final String ERROR_MULTILINGUAL_BASE_LANG_NOT_FOUND = "Base language content not found or not live in languageMapV1 for multilingual course.";
   public static final String IS_BASE_LANGUAGE = "isBaseLang";
-  public static final String EXTERNAL_COURSES = "external_courses";
 
   private JsonKey() {}
 }
