@@ -851,8 +851,9 @@ class CourseEnrolmentActor @Inject()(@Named("course-batch-notification-actor") c
         val enrolledUsers = Option(userCoursesDao.getBatchParticipants(request.getRequestContext, batchId, true))
           .getOrElse(new java.util.ArrayList[Any]())
 
-        val batchAttributes = batchData.getBatchAttributes
-        val maxBatchSizeStr = Option(batchAttributes.get(JsonKey.CURRENT_BATCH_SIZE))
+        val batchAttributesOpt = Option(batchData.getBatchAttributes)
+        val maxBatchSizeStr = batchAttributesOpt
+          .flatMap(attrs => Option(attrs.get(JsonKey.CURRENT_BATCH_SIZE)))
           .map(_.toString.trim)
           .getOrElse("")
 
