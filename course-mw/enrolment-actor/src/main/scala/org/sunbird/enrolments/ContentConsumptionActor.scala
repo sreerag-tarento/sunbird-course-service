@@ -704,17 +704,20 @@ class ContentConsumptionActor @Inject() extends BaseEnrolmentActor {
 
   def getLatestReadDetailsForEventStateUpdate(userId: String, batchId: String,contentId:String,contextId:String, contents: List[java.util.Map[String, AnyRef]]) = {
     val lastAccessContent: java.util.Map[String, AnyRef] = contents.groupBy(x => x.getOrDefault(JsonKey.LAST_ACCESS_TIME_KEY, null).asInstanceOf[Date]).maxBy(_._1)._2.get(0)
+    val status = lastAccessContent.get("status").asInstanceOf[Integer]
     val updateMap = new java.util.HashMap[String, AnyRef] () {{
       put("lastreadcontentid", lastAccessContent.get(JsonKey.CONTENT_ID_KEY))
       put("lastreadcontentstatus", lastAccessContent.get("status"))
       put("lrc_progressdetails", lastAccessContent.get("progressdetails"))
       put("completionpercentage", lastAccessContent.get("completionpercentage"))
       put("progress", lastAccessContent.get("progress"))
-      put("status", lastAccessContent.get("status"))
+      put("status", status)
       put(JsonKey.LAST_CONTENT_ACCESS_TIME, lastAccessContent.get(JsonKey.LAST_ACCESS_TIME_KEY))
-      val now = ZonedDateTime.now(ZoneId.of("Asia/Calcutta"))
-      val epochMillis = now.toInstant.toEpochMilli
-      put("completedon", java.lang.Long.valueOf(epochMillis))
+      if (status != null && status == 2) {
+        val now = ZonedDateTime.now(ZoneId.of("Asia/Calcutta"))
+        val epochMillis = now.toInstant.toEpochMilli
+        put(JsonKey.COMPLETED_ON, java.lang.Long.valueOf(epochMillis))
+      }
     }}
     val selectMap = new util.HashMap[String, AnyRef]() {{
       put("batchid", batchId)
