@@ -12,7 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -254,5 +256,69 @@ class ContentStateServiceImplTest {
         Map<String, String> mapping = Map.of("foo", "baz");
         Map<String, Object> result = ContentStateServiceImpl.mapPayloadToCassandraColumns(payload, mapping);
         assertEquals("bar", result.get("baz"));
+    }
+
+    @Test
+    void testConvertInstantsToString_singleInstant() {
+        Instant now = Instant.now();
+        Object result = invokeConvert(now);
+
+        assertTrue(result instanceof String);
+        assertEquals(now.toString(), result);
+    }
+
+    @Test
+    void testConvertInstantsToString_mapWithInstant() {
+        Instant now = Instant.now();
+        Map<String, Object> input = Map.of("time", now);
+
+        Object result = invokeConvert(input);
+
+        assertTrue(result instanceof Map);
+        assertEquals(now.toString(), ((Map<?, ?>) result).get("time"));
+    }
+
+    @Test
+    void testConvertInstantsToString_listWithInstant() {
+        Instant now = Instant.now();
+        List<Object> input = List.of(now, "test");
+
+        Object result = invokeConvert(input);
+
+        assertTrue(result instanceof List);
+        assertEquals(now.toString(), ((List<?>) result).get(0));
+        assertEquals("test", ((List<?>) result).get(1));
+    }
+
+    @Test
+    void testConvertInstantsToString_nestedMapAndList() {
+        Instant now = Instant.now();
+        Map<String, Object> input = Map.of(
+                "list", List.of(Map.of("time", now))
+        );
+
+        Object result = invokeConvert(input);
+
+        assertEquals(
+                now.toString(),
+                ((Map<?, ?>) ((List<?>) ((Map<?, ?>) result).get("list")).get(0)).get("time")
+        );
+    }
+
+    @Test
+    void testConvertInstantsToString_nonInstantValue() {
+        String value = "not a time";
+        Object result = invokeConvert(value);
+
+        assertSame(value, result);
+    }
+
+    private Object invokeConvert(Object value) {
+        // Call the private static method using ReflectionTestUtils
+        return ReflectionTestUtils.invokeMethod(
+                ContentStateServiceImpl.class,
+                "convertInstantsToString",
+                value
+        );
     }
 }
