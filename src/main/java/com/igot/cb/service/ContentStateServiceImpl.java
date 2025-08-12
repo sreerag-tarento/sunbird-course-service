@@ -153,9 +153,12 @@ public class ContentStateServiceImpl {
                 return mapped;
             }).toList();
 
-            response.getResult().put(Constants.CONTENT_LIST,
-                    objectMapper.convertValue(mappedUserContentDetails, new TypeReference<Object>() {
-                    }));
+            Object convertInstantsToString = convertInstantsToString(mappedUserContentDetails);
+
+            response.getResult().put(
+                    Constants.CONTENT_LIST,
+                    objectMapper.convertValue(convertInstantsToString, new TypeReference<Object>() {})
+            );
             response.setResponseCode(HttpStatus.OK);
             return response;
 
@@ -166,6 +169,28 @@ public class ContentStateServiceImpl {
 
         }
     }
+
+
+    @SuppressWarnings("unchecked")
+    private static Object convertInstantsToString(Object value) {
+        if (value instanceof Instant) {
+            return value.toString();
+        } else if (value instanceof Map) {
+            Map<String, Object> convertedMap = new HashMap<>();
+            ((Map<?, ?>) value).forEach((k, v) ->
+                    convertedMap.put(String.valueOf(k), convertInstantsToString(v))
+            );
+            return convertedMap;
+        } else if (value instanceof List) {
+            return ((List<?>) value).stream()
+                    .map(ContentStateServiceImpl::convertInstantsToString)
+                    .toList();
+        } else {
+            return value;
+        }
+    }
+
+
 
     public ApiResponse updateContentState(Map<String, Object> requestBody, String authToken) {
         log.info("CourseService::readContentState:inside");
