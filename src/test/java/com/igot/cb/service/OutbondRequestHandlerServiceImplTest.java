@@ -8,16 +8,14 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 
 @ExtendWith(MockitoExtension.class)
 class OutboundRequestHandlerServiceImplTest {
@@ -106,5 +104,59 @@ class OutboundRequestHandlerServiceImplTest {
 
         // response object will remain null
         assertNull(result);
+    }
+
+    @Test
+    void testFetchResultUsingPatch_success() {
+        String uri = "http://mock-service/api/patch";
+        Map<String, Object> request = Map.of("key", "value");
+        Map<String, String> headers = Map.of("Content-Type", "application/json");
+        Map<String, Object> mockResponse = Map.of("result", "success");
+
+        when(restTemplate.patchForObject(eq(uri), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        Map<String, Object> result = outboundService.fetchResultUsingPatch(uri, request, headers);
+
+        assertNotNull(result);
+        assertEquals("success", result.get("result"));
+    }
+
+    @Test
+    void testFetchResultUsingPatch_httpClientError() {
+        String uri = "http://mock-service/api/patch";
+        Map<String, Object> request = Map.of("key", "value");
+        Map<String, String> headers = Map.of("Content-Type", "application/json");
+        String errorJson = "{\"error\":\"Bad Request\"}";
+
+        HttpClientErrorException exception = HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                new HttpHeaders(),
+                errorJson.getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8);
+
+        when(restTemplate.patchForObject(eq(uri), any(HttpEntity.class), eq(Map.class)))
+                .thenThrow(exception);
+
+        Map<String, Object> result = outboundService.fetchResultUsingPatch(uri, request, headers);
+
+        assertNotNull(result);
+        assertEquals("Bad Request", result.get("error"));
+    }
+
+    @Test
+    void testFetchResultUsingPatch_nullResponse() {
+        String uri = "http://mock-service/api/patch";
+        Map<String, Object> request = Map.of("key", "value");
+        Map<String, String> headers = new HashMap<>();
+
+        when(restTemplate.patchForObject(eq(uri), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(null);
+
+        Map<String, Object> result = outboundService.fetchResultUsingPatch(uri, request, headers);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 }

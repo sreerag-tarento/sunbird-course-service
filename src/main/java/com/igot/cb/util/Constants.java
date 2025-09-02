@@ -322,6 +322,10 @@ public class Constants {
     public static final String BATCH = "batch";
     public static final String IDENTIFIER = "identifier";
     public static final String PROFILE_DETAILS_KEY = "profileDetails";
+    public static final String STREAMING_URL = "streamingUrl";
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String STREAMING_URI = "streamUri";
 
     private Constants() {
     }
