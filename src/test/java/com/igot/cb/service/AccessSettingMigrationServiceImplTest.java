@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -56,7 +55,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = Map.of(
                                 Constants.USER_GROUP_ID, "group-123",
                                 Constants.USER_GROUP_NAME, "Test Group",
-                                Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                                Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = Map.of(Constants.USER_GROUPS, List.of(userGroup));
 
@@ -211,7 +210,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = new HashMap<>();
                 userGroup.put(Constants.USER_GROUP_ID, "g1");
                 userGroup.put(Constants.USER_GROUP_NAME, "UG1");
-                userGroup.put(Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                userGroup.put(Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = new HashMap<>();
                 accessControl.put(Constants.USER_GROUPS, List.of(userGroup));
@@ -240,7 +239,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = new HashMap<>();
                 userGroup.put(Constants.USER_GROUP_ID, "g1");
                 userGroup.put(Constants.USER_GROUP_NAME, "UG1");
-                userGroup.put(Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                userGroup.put(Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = new HashMap<>();
                 accessControl.put(Constants.USER_GROUPS, List.of(userGroup));
@@ -271,7 +270,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = new HashMap<>();
                 userGroup.put(Constants.USER_GROUP_ID, "g1");
                 userGroup.put(Constants.USER_GROUP_NAME, "UG1");
-                userGroup.put(Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                userGroup.put(Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = new HashMap<>();
                 accessControl.put(Constants.USER_GROUPS, List.of(userGroup));
@@ -334,7 +333,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = Map.of(
                                 Constants.USER_GROUP_ID, "g1",
                                 Constants.USER_GROUP_NAME, "name",
-                                Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                                Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = Map.of(Constants.USER_GROUPS, List.of(userGroup));
                 Map<String, Object> contextData = Map.of(Constants.ACCESS_CONTROL, accessControl);
@@ -344,9 +343,6 @@ class AccessSettingMigrationServiceImplTest {
                 accessSettingMap.put(Constants.CONTEXT_DATA, objectMapper.writeValueAsString(contextData));
 
                 when(contentService.readCourseCategoryForContent(contextId)).thenReturn("Course");
-
-                // Simulate mismatch (returning 0 user groups in output instead of 1)
-                // when(idMapCacheMgr.getId(anyList())).thenReturn(Map.of("A", 1));
 
                 var spyService = new AccessSettingMigrationServiceImpl(cassandraOperation, contentService,
                                 idMapCacheMgr) {
@@ -414,12 +410,12 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup1 = Map.of(
                                 Constants.USER_GROUP_ID, "group-001",
                                 Constants.USER_GROUP_NAME, "Group A",
-                                Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria1));
+                                Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria1));
 
                 Map<String, Object> userGroup2 = Map.of(
                                 Constants.USER_GROUP_ID, "group-002",
                                 Constants.USER_GROUP_NAME, "Group B",
-                                Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria2));
+                                Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria2));
 
                 Map<String, Object> accessControl = Map.of(
                                 Constants.USER_GROUPS, List.of(userGroup1, userGroup2));
@@ -460,7 +456,7 @@ class AccessSettingMigrationServiceImplTest {
 
                 for (Map<String, Object> group : updatedUserGroups) {
                         List<Map<String, Object>> criteriaList = (List<Map<String, Object>>) group
-                                        .get(Constants.USER_GROUP_CRTIRIA_LIST);
+                                        .get(Constants.USER_GROUP_CRITERIA_LIST);
                         assertEquals(1, criteriaList.size());
                         for (Map<String, Object> crit : criteriaList) {
                                 assertTrue(crit.containsKey(Constants.CRITERIA_KEY));
@@ -480,7 +476,7 @@ class AccessSettingMigrationServiceImplTest {
                 Map<String, Object> userGroup = Map.of(
                                 Constants.USER_GROUP_ID, "group-error",
                                 Constants.USER_GROUP_NAME, "Error Group",
-                                Constants.USER_GROUP_CRTIRIA_LIST, List.of(criteria));
+                                Constants.USER_GROUP_CRITERIA_LIST, List.of(criteria));
 
                 Map<String, Object> accessControl = Map.of(
                                 Constants.USER_GROUPS, List.of(userGroup));

@@ -1,5 +1,8 @@
 package com.igot.cb.util;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author Mahesh RV
  */
@@ -103,6 +106,12 @@ public class Constants {
     public static final String LAST_UPDATED_AT = "lastupdatedat";
     public static final String USER_DETAILS = "userDetails";
     public static final String USER_COUNT = "usersJoinedCount";
+    public static final String PLAN_ID = "planId";
+    public static final String END_DATE = "enddate";
+    public static final String CONTENT_TYPE = "contentType";
+    public static final String COMMENT = "comment";
+    public static final String ALL = "All";
+    public static final String END_DATE_REQUEST = "endDate";
     public static String CommunityId = "communityId";
     public static final String ALREADY_JOINED_COMMUNITY = "This user is already joined this community";
     public static final String API_COMMUNITY_JOIN = "api.community.join";
@@ -123,7 +132,7 @@ public class Constants {
     public static final String ALREADY_CATEGORY_PRESENT = "This Category is already present";
     public static final String DESCRIPTION = "description";
     public static final String CREATED_AT = "createdAt";
-    public static final String UPDATED_AT = "lastUpdatedAt";
+    public static final String UPDATED_AT = "updatedAt";
     public static final String CATEGORY_INDEX_NAME = "community_category_entity_alias";
     public static final String SUB_CATEGORY = "subCategory";
     public static final String CATEGORY_PAYLOAD_VALIDATION_FILE = "/payloadValidation/categoryValidationFile.json";
@@ -210,7 +219,7 @@ public class Constants {
     public static final String DESIGNATION = "designation";
     public static final String NULL_STRING = "null";
     public static final Object USER_ID_REDIS_KEY = "user_id";
-    public static final String PROFILE_DETAILS = "profiledetails";
+    public static final String PROFILE_DETAILS = "profileDetails";
     public static final String USER_ID_KEY = "user_id";
     public static final String FIRST_NAME_KEY = "first_name";
     public static final String PROFILE_IMG_KEY = "user_profile_img_url";
@@ -278,7 +287,7 @@ public class Constants {
     public static final String COMPLETION_PERCENTAGE_LOWER_CASE = "completion_percentage";
     public static final String ACCESS_CONTROL = "accessControl";
     public static final String USER_GROUPS = "userGroups";
-    public static final String USER_GROUP_CRTIRIA_LIST = "userGroupCriteriaList";
+    public static final String USER_GROUP_CRITERIA_LIST = "userGroupCriteriaList";
     public static final String CRITERIA_VALUE = "criteriaValue";
     public static final String ACCESS_SETTINGS_CREATE_API = "api.accessSettings.create";
     public static final String USER_GROUP_ID = "userGroupId";
@@ -322,6 +331,64 @@ public class Constants {
     public static final String BATCH = "batch";
     public static final String IDENTIFIER = "identifier";
     public static final String PROFILE_DETAILS_KEY = "profileDetails";
+    public static final String CENTRAL_DEPUTATION = "isOnCentralDeputation";
+    public static final String ACCESS_KEY = "access_";
+    public static final String NO_RECORDS_FOUND = "No records found for this user";
+    public static final String CBP_MANUAL_COURSES_END_DATE = "cbPlanEndDate";
+    public static final String API_CB_PLAN_CREATE = "api.cb.plan.v2.create";
+    public static final String API_CB_PLAN_UPDATE = "api.cb.plan.v2.update";
+    public static final String API_CB_PLAN_PUBLISH = "api.cb.plan.v2.publish";
+    public static final String IS_APAR ="isApar";
+    public static final String DRAFT_DATA = "draftData";
+    public static final String TABLE_CB_PLAN_V2 = "cb_plan_v2";
+    public static final String CREATED = "Cbplan created successfully";
+    public static final String CONTEXT_DATA_REQUEST = "contextData";
+    public static final String SINGLE = "Single";
+    public static final String CUSTOM ="Custom";
+    public static final String ORG_ID_LIST = "orgIdList";
+    public static final String TABLE_CB_PLAN_V2_LOOKUP_BY_ORG = "cb_plan_v2_lookup_by_org";
+    public static final String TABLE_CB_PLAN_V2_LOOKUP_BY_ALL_ORG = "cb_plan_v2_lookup_by_all_org";
+    public static final String ORG_SCOPE = "orgScope";
+    public static final String X_AUTH_USER_ROLES = "x-authenticated-user-roles";
+    public static final String LIVE = "Live";
+    public static final	String CB_PUBLISHED_BY	= "publishedby";
+    public static final Object UPDATED = "Updated";
+    public static final String MESSAGE = "message";
+    public static final String EXCEPTION_MSG_DELETE = "Exception occurred while deleting record from ";
+    public static final String CB_RETIRE = "RETIRE";
+    public static final String CB_PUBLISHED_AT = "publishedat";
+    public static final String API_CB_PLAN_READ_BY_ID = "api.cb.plan.v2.read.byId";
+    public static final List<String> DECRYPTED_FIELDS = Arrays.asList("phone", "email");
+    public static final String FIRSTNAME = "firstName";
+    public static final String CREATED_BY_NAME = "createdByName";
+    public static final String COMPETENCIES_V5 = "competencies_v5";
+    public static final String AVG_RATING = "avgRating";
+    public static final String ADDITIONAL_TAGS = "additionalTags";
+    public static final String CONTENT_TYPE_KEY = "contentType";
+    public static final String DURATION = "duration";
+    public static final String COURSE_APP_ICON = "appIcon";
+    public static final String POSTER_IMAGE = "posterImage";
+    public static final String ORGANISATION = "organisation";
+    public static final String CREATOR_LOGO = "creatorLogo";
+    public static final String LANGUAGE_MAP_V1 = "languageMapV1";
+    public static final String CIPHER_ALGORITHM = "AES";
+    public static final byte[] CIPHER_KEY = new byte[] { 'T', 'h', 'i', 's', 'A', 's', 'I', 'S', 'e', 'r', 'c', 'e',
+            'K', 't', 'e', 'y' };
+    public static final String CREATED_AT_REQ = "createdat";
+    public static final String PUBLISHED_AT= "publishedAt";
+    public static final String NUMBER = "number";
+    public static final String LONG = "long";
+    public static final String DATE = "date";
+
+    public static final String CB_PLAN_TABLE = "cb_plan";
+    public static final String ASSIGNMENT_TYPE = "assignmentType";
+    public static final String ASSIGNMENT_TYPE_INFO = "assignmentTypeInfo";
+    public static final String API_CB_PLAN_RETIRE = "api.cb.plan.v2.retire";
+    public static final String IS_ACTIVE = "isactive";
+    public static final String PLAN_ID_RQST = "planid";
+    public static final String ORG_ID_RQST = "orgid";
+    public static final String PLAN_YEAR = "planyear";
+
 
     private Constants() {
     }
