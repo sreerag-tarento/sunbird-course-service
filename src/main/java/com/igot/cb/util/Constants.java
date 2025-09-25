@@ -409,7 +409,9 @@ public class Constants {
     public static final String VALUE = "value";
     public static final String ORG_ID_REQT = "orgid";
     public static final String X_AUTH_USER_ID = "x-authenticated-userid";
-
+    public static final String STREAMING_URL = "streamingUrl";
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String STREAMING_URI = "streamUri";
 
     private Constants() {
     }
