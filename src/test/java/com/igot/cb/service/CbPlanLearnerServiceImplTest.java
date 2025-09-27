@@ -223,7 +223,7 @@ class CbPlanLearnerServiceImplTest {
         setUserProfileMethod.invoke(service, userProfile, userBasicProfile);
         
         assertEquals("user123", userProfile.get(Constants.USER));
-        assertEquals("org123", userProfile.get(Constants.ROOT_ORG_ID));
+        assertEquals("org123", userProfile.get(Constants.USER_ROOT_ORG_ID));
     }
 
     @Test
