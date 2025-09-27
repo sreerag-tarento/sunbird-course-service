@@ -274,7 +274,9 @@ public class CbPlanLearnerServiceImpl {
             if (org.apache.commons.collections4.MapUtils.isNotEmpty(cadreDetails)) {
                 userProfile.put(Constants.CADRE, (String) cadreDetails.get(Constants.CADRE_NAME));
                 userProfile.put(Constants.SERVICE, (String) cadreDetails.get(Constants.CIVIL_SERVICE_NAME));
-
+                if (cadreDetails.containsKey(Constants.CADRE_BATCH)) {  
+                    userProfile.put(Constants.BATCH, String.valueOf(cadreDetails.get(Constants.CADRE_BATCH)));
+                }
                 if (cadreDetails.containsKey(Constants.CENTRAL_DEPUTATION)) {
                     centralDeputation = (Boolean) cadreDetails.get(Constants.CENTRAL_DEPUTATION);
                 }
@@ -306,10 +308,6 @@ public class CbPlanLearnerServiceImpl {
             log.warn("No userGroups found under accessControl");
             return false;
         }
-        if (CollectionUtils.isEmpty(userGroups)) {
-            return false;
-        }
-
         // Iterate through all groups: user must match at least one fully
         for (Map<String, Object> userGroup : userGroups) {
             String userGroupName = (String) userGroup.get(Constants.USER_GROUP_NAME); // adjust constant if you have
