@@ -81,13 +81,11 @@ public class CbPlanLearnerServiceImpl {
             }
             logger.info("UserId of the User : " + userId + ", User org ID : " + userOrgId);
 
-            Map<String, Object> propertiesMap = new HashMap<>();
-
             Map<String, String> userProfile = new HashMap<>();
-            Map<String, Object> queryParams = Map.of(Constants.ID, userId);
+            Map<String, Object> propertiesMap = Map.of(Constants.ID, userId);
             List<String> userFields = Arrays.asList(Constants.ID, Constants.ROOT_ORG_ID, Constants.PROFILE_DETAILS);
             List<Map<String, Object>> userList = cassandraOperation.getRecordsByProperties(
-                    Constants.KEYSPACE_SUNBIRD, Constants.USER, queryParams, userFields, null);
+                    Constants.KEYSPACE_SUNBIRD, Constants.USER, propertiesMap, userFields, null);
             if (CollectionUtils.isEmpty(userList)) {
                 response.getParams().setStatus(Constants.FAILED);
                 response.getParams().setErr("User Does not Exist");
@@ -247,7 +245,7 @@ public class CbPlanLearnerServiceImpl {
             return;
         }
         userProfile.put(Constants.USER, (String) userBasicProfile.get(Constants.ID));
-        userProfile.put(Constants.USER_ROOT_ORG_ID, (String) userBasicProfile.get(Constants.ROOT_ORG_ID.toLowerCase()));
+        userProfile.put(Constants.USER_ROOT_ORG_ID, (String) userBasicProfile.get(Constants.ROOT_ORG_ID));
         Object rawValue = userBasicProfile.get(Constants.PROFILE_DETAILS.toLowerCase());
         Map<String, Object> profileDetails;
 
