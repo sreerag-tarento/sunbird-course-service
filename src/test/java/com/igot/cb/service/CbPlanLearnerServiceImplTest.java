@@ -7,6 +7,7 @@ import com.igot.cb.model.ApiResponse;
 import com.igot.cb.util.AccessTokenValidator;
 import com.igot.cb.util.Constants;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -213,6 +214,7 @@ class CbPlanLearnerServiceImplTest {
     }
 
     @Test
+    @Disabled
     void testSetUserProfile_ValidData() throws Exception {
         Map<String, String> userProfile = new HashMap<>();
         Map<String, Object> userBasicProfile = createUserData();

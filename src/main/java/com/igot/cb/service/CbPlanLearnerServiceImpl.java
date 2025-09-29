@@ -81,13 +81,11 @@ public class CbPlanLearnerServiceImpl {
             }
             logger.info("UserId of the User : " + userId + ", User org ID : " + userOrgId);
 
-            Map<String, Object> propertiesMap = new HashMap<>();
-
             Map<String, String> userProfile = new HashMap<>();
-            Map<String, Object> queryParams = Map.of(Constants.ID, userId);
+            Map<String, Object> propertiesMap = Map.of(Constants.ID, userId);
             List<String> userFields = Arrays.asList(Constants.ID, Constants.ROOT_ORG_ID, Constants.PROFILE_DETAILS);
             List<Map<String, Object>> userList = cassandraOperation.getRecordsByProperties(
-                    Constants.KEYSPACE_SUNBIRD, Constants.USER, queryParams, userFields, null);
+                    Constants.KEYSPACE_SUNBIRD, Constants.USER, propertiesMap, userFields, null);
             if (CollectionUtils.isEmpty(userList)) {
                 response.getParams().setStatus(Constants.FAILED);
                 response.getParams().setErr("User Does not Exist");
@@ -241,12 +239,13 @@ public class CbPlanLearnerServiceImpl {
 
 
     private void setUserProfile(Map<String, String> userProfile, Map<String, Object> userBasicProfile) throws JsonProcessingException {
+        //Make sure that userProfile contains keys with small case only.
         if (org.apache.commons.collections4.MapUtils.isEmpty(userBasicProfile)) {
             log.warn("User basic profile is empty for userId: {}", userProfile.get(Constants.ID));
             return;
         }
         userProfile.put(Constants.USER, (String) userBasicProfile.get(Constants.ID));
-        userProfile.put(Constants.ROOT_ORG_ID, (String) userBasicProfile.get(Constants.ROOT_ORG_ID.toLowerCase()));
+        userProfile.put(Constants.USER_ROOT_ORG_ID, (String) userBasicProfile.get(Constants.ROOT_ORG_ID));
         Object rawValue = userBasicProfile.get(Constants.PROFILE_DETAILS.toLowerCase());
         Map<String, Object> profileDetails;
 
@@ -266,20 +265,21 @@ public class CbPlanLearnerServiceImpl {
                 userProfile.put(Constants.DESIGNATION, (String) professionalDetails.get(Constants.DESIGNATION));
                 userProfile.put(Constants.GROUP, (String) professionalDetails.get(Constants.GROUP));
             }
-            userProfile.put(Constants.PROFILE_STATUS_KEY,
+            userProfile.put(Constants.PROFILE_STATUS_LOWER_KEY,
                     (String) profileDetails.get(Constants.PROFILE_STATUS_KEY));
             Map<String, Object> cadreDetails = (Map<String, Object>) profileDetails.get(Constants.CADRE_DETAILS);
             boolean centralDeputation = false;
             if (org.apache.commons.collections4.MapUtils.isNotEmpty(cadreDetails)) {
                 userProfile.put(Constants.CADRE, (String) cadreDetails.get(Constants.CADRE_NAME));
                 userProfile.put(Constants.SERVICE, (String) cadreDetails.get(Constants.CIVIL_SERVICE_NAME));
-
+                if (cadreDetails.containsKey(Constants.CADRE_BATCH)) {  
+                    userProfile.put(Constants.BATCH, String.valueOf(cadreDetails.get(Constants.CADRE_BATCH)));
+                }
                 if (cadreDetails.containsKey(Constants.CENTRAL_DEPUTATION)) {
                     centralDeputation = (Boolean) cadreDetails.get(Constants.CENTRAL_DEPUTATION);
                 }
-
             }
-            userProfile.put(Constants.CENTRAL_DEPUTATION, String.valueOf(centralDeputation));
+            userProfile.put(Constants.CENTRAL_DEPUTATION_LOWER_KEY, String.valueOf(centralDeputation));
         }
 //        getExistingContextData((String) userBasicProfile.get(Constants.ID),
 //                (String) userBasicProfile.get(Constants.ROOT_ORG_ID.toLowerCase()),
@@ -306,10 +306,6 @@ public class CbPlanLearnerServiceImpl {
             log.warn("No userGroups found under accessControl");
             return false;
         }
-        if (CollectionUtils.isEmpty(userGroups)) {
-            return false;
-        }
-
         // Iterate through all groups: user must match at least one fully
         for (Map<String, Object> userGroup : userGroups) {
             String userGroupName = (String) userGroup.get(Constants.USER_GROUP_NAME); // adjust constant if you have
@@ -323,6 +319,7 @@ public class CbPlanLearnerServiceImpl {
             }
             for (Map<String, Object> criteria : criteriaList) {
                 String criteriaKey = (String) criteria.get(Constants.CRITERIA_KEY);
+                criteriaKey = criteriaKey.toLowerCase().trim(); // normalize key to lower case
                 Object rawCriteriaValue = criteria.get(Constants.CRITERIA_VALUE);
 
                 if (Constants.CENTRAL_DEPUTATION.equals(criteriaKey)) {
