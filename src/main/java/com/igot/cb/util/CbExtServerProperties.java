@@ -1,12 +1,13 @@
 package com.igot.cb.util;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Component
 @Getter
@@ -24,6 +25,9 @@ public class CbExtServerProperties {
 
     @Value("${elastic.required.field.cb.plan.json.path}")
     private String elasticCbPlanJsonPath;
+
+    @Value("${msg.on.user.group.restriction.for.all.org}")
+    private String msgOnUserGroupRestrictionForAllOrg;
 
     @Value("${non.text.fields}")
     private String nonTextFields;
