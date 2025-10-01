@@ -8,6 +8,7 @@ import com.igot.cb.model.ApiResponse;
 import com.igot.cb.util.AccessTokenValidator;
 import com.igot.cb.util.Constants;
 import com.igot.cb.util.ProjectUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -134,36 +135,6 @@ public class ConsentAcknowledgeServiceImpl implements IConsentAcknowledgeService
     }
 
 
-    /**
-     * Method to get consent details by consentId
-     */
-    @Override
-    public ApiResponse getConsentDetails(String consentId, String authToken) {
-        ApiResponse response = ProjectUtil.createDefaultResponse("api.consent.read");
-        String userId = accessTokenValidator.fetchUserIdFromAccessToken(authToken, response);
-        if (StringUtils.isEmpty(userId)) {
-            return response;
-        }
-        Map<String, Object> propertyMap = new HashMap<>();
-        propertyMap.put(Constants.CONSENT_ID, consentId);
-        List<Map<String, Object>> consentDetails;
-        try {
-            consentDetails = cassandraOperation
-                    .getRecordsByProperties(Constants.KEYSPACE_SUNBIRD, Constants.TABLE_CONSENT_DETAILS, propertyMap, Arrays.asList(Constants.CONSENT_ID, Constants.ADDITIONAL_DATA, Constants.DESCRIPTION), null);
-        } catch (Exception e) {
-            logger.error("Error while fetching consent details from DB", e);
-            ProjectUtil.errorResponse(response, "Failed to fetch consent details. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
-            return response;
-        }
-        Map<String, Object> consentDetailsMap = consentDetails.get(0);
-        response.getParams().setStatus(Constants.OK);
-        response.setResponseCode(HttpStatus.OK);
-        Map<String, Object> result = new HashMap<>();
-        result.put(Constants.RESPONSE, consentDetailsMap);
-        response.getResult().putAll(result);
-        return response;
-    }
-
 
     /**
      * Method to get consent acknowledgement details by contentId and consentId
@@ -188,6 +159,16 @@ public class ConsentAcknowledgeServiceImpl implements IConsentAcknowledgeService
             ProjectUtil.errorResponse(response, "Failed to fetch consent Acknowledgement details. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
             return response;
         }
+        Map<String, Object> result = new HashMap<>();
+        if (CollectionUtils.isEmpty(consentAcknowledgementDetailsList)) {
+            response.getParams().setStatus(Constants.OK);
+            response.setResponseCode(HttpStatus.OK);
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put(Constants.MESSAGE, " No consent acknowledgement record found for the given contentId and consentId");
+            result.put(Constants.RESPONSE, responseMap);
+            response.getResult().putAll(result);
+            return response;
+        }
         Map<String, Object> consentAcknowledgementDetailsMap = consentAcknowledgementDetailsList.get(0);
         String additionAttributesStr = (String) consentAcknowledgementDetailsMap.get(Constants.ADDITIONAL_ATTRIBUTES);
         Map<String, Object> additionalAttributesMap = null;
@@ -202,7 +183,6 @@ public class ConsentAcknowledgeServiceImpl implements IConsentAcknowledgeService
         consentAcknowledgementDetailsMap.put(Constants.ADDITIONAL_ATTRIBUTES, additionalAttributesMap);
         response.getParams().setStatus(Constants.OK);
         response.setResponseCode(HttpStatus.OK);
-        Map<String, Object> result = new HashMap<>();
         result.put(Constants.RESPONSE, consentAcknowledgementDetailsMap);
         response.getResult().putAll(result);
         return response;
