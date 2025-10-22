@@ -60,7 +60,7 @@ class RedisCacheUtil {
       * @param jedis
       */
     protected def returnConnection(jedis: Jedis): Unit = {
-        try if (null != jedis) jedisPool.returnResource(jedis)
+      try if (jedis != null) jedis.close()
         catch {
             case e: Exception => throw e
         }
@@ -98,7 +98,7 @@ class RedisCacheUtil {
         try {
             jedis.del(key)
             jedis.set(key, data)
-            if (ttl > 0) jedis.expire(key, ttl)
+            if (ttl > 0) jedis.expire(key, Int.box(ttl))
         } catch {
             case e: Exception =>
                 logger.error(null, "Exception Occurred While Saving String Data to Redis Cache for Key : " + key + "| Exception is:", e)
@@ -194,7 +194,7 @@ class RedisCacheUtil {
             if (!isPartialUpdate)
                 jedis.del(key)
             data.foreach(entry => jedis.sadd(key, entry))
-            if (ttl > 0 && !isPartialUpdate) jedis.expire(key, ttl)
+            if (ttl > 0 && !isPartialUpdate) jedis.expire(key, Int.box(ttl))
         } catch {
             case e: Exception =>
                 logger.error(null, "Exception Occurred While Saving List Data to Redis Cache for Key : " + key + "| Exception is:", e)
@@ -290,7 +290,7 @@ class RedisCacheUtil {
       */
     def delete(keys: String*): Unit = {
         val jedis = getConnection
-        try jedis.del(keys.map(_.asInstanceOf[String]): _*)
+        try keys.foreach(k => jedis.del(k))
         catch {
             case e: Exception =>
                 logger.error(null, "Exception Occurred While Deleting Records From Redis Cache for Identifiers : " + keys.toArray + " | Exception is : ", e)
@@ -309,7 +309,7 @@ class RedisCacheUtil {
             try {
                 val keys = jedis.keys(pattern)
                 if (keys != null && keys.size > 0)
-                    jedis.del(keys.toArray.map(_.asInstanceOf[String]): _*)
+                   keys.asScala.foreach(k => jedis.del(k))
             } catch {
                 case e: Exception =>
                     logger.error(null, "Exception Occurred While Deleting Records From Redis Cache for Pattern : " + pattern + " | Exception is : ", e)
