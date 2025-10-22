@@ -44,15 +44,18 @@ public class ContentCacheHandlerV2 {
     public Map<String, Object> getContent(String id) throws Exception {
         Map<String, Object> content = contentCache.getIfPresent(id);
         if (content != null) return content;
-
-        logger.info(null, "ContentCacheHandlerV2:getContent: Reading content from Redis for id: " + id);
         int ttl = Integer.parseInt(PropertiesCache.getInstance().getProperty(JsonKey.CONTENT_TTL));
-        String cacheResponse = redisCacheUtil.getUsingIndex(id, null, ttl, 0);
         ObjectMapper mapper = new ObjectMapper();
-        if (cacheResponse != null && !cacheResponse.trim().isEmpty() && !cacheResponse.trim().equals("{}")) {
-            content = mapper.readValue(cacheResponse, new TypeReference<Map<String, Object>>() {});
-            contentCache.put(id, content);
-            return content;
+        try {
+            logger.info(null, "ContentCacheHandlerV2:getContent: Reading content from Redis for id: " + id);
+            String cacheResponse = redisCacheUtil.getUsingIndex(id, null, ttl, 0);
+            if (cacheResponse != null && !cacheResponse.trim().isEmpty() && !cacheResponse.trim().equals("{}")) {
+                content = mapper.readValue(cacheResponse, new TypeReference<Map<String, Object>>() {});
+                contentCache.put(id, content);
+                return content;
+            }
+        } catch (Exception e) {
+            logger.error(null, "ContentCacheHandlerV2:getContent: Error while reading content from Redis for id: " + id, e);
         }
         logger.info(null, "ContentCacheHandlerV2:getContent: Content not found in Redis for id: " + id);
         content = ContentUtil.getContentReadV3(id, null, null);
