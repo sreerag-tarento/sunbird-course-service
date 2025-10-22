@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import net.logstash.logback.encoder.org.apache.commons.lang3.StringUtils;
 import org.sunbird.cache.util.RedisCacheUtil;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerUtil;
@@ -49,7 +50,7 @@ public class ContentCacheHandlerV2 {
         try {
             logger.info(null, "ContentCacheHandlerV2:getContent: Reading content from Redis for id: " + id);
             String cacheResponse = redisCacheUtil.getUsingIndex(id, null, ttl, 0);
-            if (cacheResponse != null && !cacheResponse.trim().isEmpty() && !cacheResponse.trim().equals("{}")) {
+            if (StringUtils.isNotBlank(cacheResponse) && !StringUtils.equals(StringUtils.trim(cacheResponse), "{}")) {
                 content = mapper.readValue(cacheResponse, new TypeReference<Map<String, Object>>() {});
                 contentCache.put(id, content);
                 return content;
