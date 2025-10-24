@@ -156,7 +156,7 @@ public class UserCoursesDaoImpl implements UserCoursesDao {
 
     List<Map<String, Object>> userCoursesList;
 
-    if (courseIdList != null && courseIdList.size() == 1 && courseIdList.get(0) != null && !courseIdList.get(0).trim().isEmpty()) {
+    if (CollectionUtils.isNotEmpty(courseIdList) && courseIdList.size() == 1 && StringUtils.isNotBlank(courseIdList.get(0))) {
       primaryKey.put(JsonKey.COURSE_ID_KEY, courseIdList);
       Response response = cassandraOperation.getRecordByIdentifier(requestContext, KEYSPACE_NAME, tableName, primaryKey, null);
       userCoursesList = (List<Map<String, Object>>) response.get(JsonKey.RESPONSE);
