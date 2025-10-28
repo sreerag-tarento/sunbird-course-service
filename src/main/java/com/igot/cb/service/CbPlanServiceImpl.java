@@ -548,6 +548,7 @@ public class CbPlanServiceImpl {
                 response.setResponseCode(HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             log.error("Failed to Read CB Plan for OrgId: " + userOrgId + "for CB PlanId: " + cbPlanId, e);
             response.getParams().setStatus(Constants.FAILED);
             response.getParams().setErr(e.getMessage());
