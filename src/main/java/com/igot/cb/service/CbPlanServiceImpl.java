@@ -560,14 +560,14 @@ public class CbPlanServiceImpl {
     private Map<String, Object> populateReadData(Map<String, Object> cbPlan) throws Exception {
         Map<String, Object> enrichData = new HashMap<>();
         List<String> contentTypeInfo = new ArrayList<>();
-        // if ((StringUtils.isNotBlank((String) cbPlan.get(Constants.DRAFT_DATA))
-        //                 && Constants.LIVE.equalsIgnoreCase((String) cbPlan.get(Constants.STATUS)))) {
-        //     CbPlanDto cbPlanDto = mapper.readValue((String) cbPlan.get(Constants.DRAFT_DATA), CbPlanDto.class);
-        //     enrichData.put(Constants.NAME, cbPlanDto.getName());
-        //     contentTypeInfo = cbPlanDto.getContentList();
-        //     enrichData.put(Constants.END_DATE_REQUEST, cbPlanDto.getEndDate());
-        //     enrichData.put(Constants.IS_APAR, cbPlanDto.getIsApar() != null ? cbPlanDto.getIsApar() : false);
-        // } else {
+        if ((StringUtils.isNotBlank((String) cbPlan.get(Constants.DRAFT_DATA)) && !((String)cbPlan.get(Constants.DRAFT_DATA)).equals("{}")) 
+                        && Constants.LIVE.equalsIgnoreCase((String) cbPlan.get(Constants.STATUS))) {
+            CbPlanDto cbPlanDto = mapper.readValue((String) cbPlan.get(Constants.DRAFT_DATA), CbPlanDto.class);
+            enrichData.put(Constants.NAME, cbPlanDto.getName());
+            contentTypeInfo = cbPlanDto.getContentList();
+            enrichData.put(Constants.END_DATE_REQUEST, cbPlanDto.getEndDate());
+            enrichData.put(Constants.IS_APAR, cbPlanDto.getIsApar() != null ? cbPlanDto.getIsApar() : false);
+        } else {
             enrichData.put(Constants.NAME, cbPlan.get(Constants.NAME));
             contentTypeInfo = (List<String>) cbPlan.get(Constants.CONTENT_LIST);
             enrichData.put(Constants.END_DATE_REQUEST, cbPlan.get(Constants.END_DATE_REQUEST));
@@ -579,7 +579,7 @@ public class CbPlanServiceImpl {
                         });
                 cbPlanDtoMap.remove(Constants.ID);
             }
-        // }
+        }
         enrichData.put(Constants.CONTENT_TYPE, cbPlan.get(Constants.CONTENT_TYPE));
         enrichData.put(Constants.CREATED_AT, cbPlan.get(Constants.CREATED_AT_REQ));
         enrichData.put(Constants.CB_PUBLISHED_AT, cbPlan.get(Constants.CB_PUBLISHED_AT));
