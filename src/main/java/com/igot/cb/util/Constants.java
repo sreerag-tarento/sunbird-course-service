@@ -470,7 +470,6 @@ public class Constants {
     public static final String UNDERSCORE = "_";
     public static final String CONTEXT_ID_KEY = "contextId";
     public static final String CONTEXT_ID_TYPE_KEY = "contextidtype";
-    public static final String FILTERS = "filters";
 
     private Constants() {
     }
