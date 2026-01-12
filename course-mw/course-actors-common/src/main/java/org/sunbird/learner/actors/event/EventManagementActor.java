@@ -2,6 +2,7 @@ package org.sunbird.learner.actors.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.logstash.logback.encoder.org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -156,14 +157,38 @@ public class EventManagementActor extends BaseActor {
 
     private void eventEnrollmentListForUser(Request request) throws Exception {
         String userId = (String) request.get(JsonKey.USER_ID);
-        logger.info(request.getRequestContext(), "EventManagementActor: list : UserId = " + userId);
+        Boolean isRetiredCourseIncluded =
+                (Boolean) request.get(JsonKey.RETIRED_COURE_ENABLED);
+        logger.info(request.getRequestContext(),
+                "EventManagementActor: list : UserId = " + userId);
         try {
-            List<Map<String, Object>> result = eventBatchDao.getEnrolmentList(request, userId);
+            List<Map<String, Object>> result =
+                    eventBatchDao.getEnrolmentList(request, userId);
+            List<Map<String, Object>> finalResult;
+            if (!isRetiredCourseIncluded) {
+                finalResult = result.stream()
+                        .filter(enrolment -> {
+                            Object eventObj = enrolment.get(JsonKey.EVENT.toLowerCase());
+                            if (!(eventObj instanceof Map)) {
+                                return true;
+                            }
+                            Map<String, Object> eventMap = (Map<String, Object>) eventObj;
+                            Object statusObj = eventMap.get(JsonKey.STATUS);
+
+                            return ObjectUtils.isEmpty(statusObj)
+                                    || !JsonKey.RETIRED.equalsIgnoreCase(
+                                    statusObj.toString().toLowerCase());
+                        })
+                        .collect(Collectors.toList());
+            } else {
+                finalResult = result;
+            }
             Response response = new Response();
-            response.put(JsonKey.EVENTS, result);
+            response.put(JsonKey.EVENTS, finalResult);
             sender().tell(response, self());
         } catch (Exception e) {
-            logger.error(request.getRequestContext(), "Exception in enrolment list for user: " + userId, e);
+            logger.error(request.getRequestContext(),
+                    "Exception in enrolment list for user: " + userId, e);
             throw e;
         }
     }
