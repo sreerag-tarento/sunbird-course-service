@@ -211,11 +211,10 @@ public class HttpUtil {
     if (StringUtils.isBlank(authorization)) {
       return cleanedHeaders;
     }
-    final String token = StringUtils.removeStartIgnoreCase(authorization, "Bearer ");
-    final String[] tokenParts = token.split("\\.");
-    if (tokenParts.length >= 3) {
-      cleanedHeaders.put(JsonKey.AUTHORIZATION, tokenParts[2]);
-    }
+    final int length = authorization.length();
+    final String lastFiveChars =
+            length > 5 ? authorization.substring(length - 5) : authorization;
+    cleanedHeaders.put(JsonKey.AUTHORIZATION, lastFiveChars);
     return cleanedHeaders;
   }
 }
