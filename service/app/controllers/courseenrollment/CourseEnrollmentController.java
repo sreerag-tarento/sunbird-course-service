@@ -282,6 +282,7 @@ public class CourseEnrollmentController extends BaseController {
         return getEnrolledCourses(uid, httpRequest, "v2", true);
     }
 
+
     public CompletionStage<Result> enrollProgram(Http.Request httpRequest, Boolean batchType) {
         return handleRequest(courseEnrolmentActor, "enrolProgram",
                 httpRequest.body().asJson(),

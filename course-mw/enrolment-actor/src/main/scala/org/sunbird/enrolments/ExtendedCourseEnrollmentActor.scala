@@ -28,7 +28,7 @@ import org.sunbird.telemetry.util.TelemetryUtil
 import java.sql.Timestamp
 import java.text.{MessageFormat, SimpleDateFormat}
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import java.util
 import java.util.{Calendar, Date, TimeZone, UUID}
 import javax.inject.{Inject, Named}
@@ -185,8 +185,12 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
       ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyCompleted, ResponseCode.courseBatchAlreadyCompleted.getErrorMessage)
 
     if (isBlendedProgram) {
-      if (isEnrol && batchData.getStartDate != null && LocalDateTime.now().isAfter(LocalDate.parse(DATE_FORMAT.format(batchData.getStartDate), DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX)))
-        ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyStarted, ResponseCode.courseBatchAlreadyStarted.getErrorMessage)
+      if (isEnrol && batchData.getStartDate != null) {
+        val istZone = ZoneId.of(ProjectUtil.getConfigValue(JsonKey.SUNBIRD_TIMEZONE))
+        val startDateEndOfDayIST = batchData.getStartDate.toInstant.atZone(istZone).toLocalDate.atTime(LocalTime.MAX).atZone(istZone)
+        if (ZonedDateTime.now(istZone).isAfter(startDateEndOfDayIST))
+          ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyStarted, ResponseCode.courseBatchAlreadyStarted.getErrorMessage)
+      }
     } else {
       if (isEnrol && batchData.getEnrollmentEndDate != null && LocalDateTime.now().isAfter(LocalDate.parse(DATE_FORMAT.format(batchData.getEnrollmentEndDate), DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX)))
         ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchEnrollmentDateEnded, ResponseCode.courseBatchEnrollmentDateEnded.getErrorMessage)
@@ -1011,8 +1015,12 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
       ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyCompleted, ResponseCode.courseBatchAlreadyCompleted.getErrorMessage)
 
     if (isBlendedProgram) {
-      if (isEnrol && null != batchData.getStartDate && LocalDateTime.now().isAfter(LocalDate.parse(DATE_FORMAT.format(batchData.getStartDate), DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX)))
-        ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyStarted, ResponseCode.courseBatchAlreadyStarted.getErrorMessage)
+      if (isEnrol && null != batchData.getStartDate) {
+        val istZone = ZoneId.of(ProjectUtil.getConfigValue(JsonKey.SUNBIRD_TIMEZONE))
+        val startDateEndOfDayIST = batchData.getStartDate.toInstant.atZone(istZone).toLocalDate.atTime(LocalTime.MAX).atZone(istZone)
+        if (ZonedDateTime.now(istZone).isAfter(startDateEndOfDayIST))
+          ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchAlreadyStarted, ResponseCode.courseBatchAlreadyStarted.getErrorMessage)
+      }
     }
     if (isEnrol && null != batchData.getEnrollmentEndDate && LocalDateTime.now().isAfter(LocalDate.parse(DATE_FORMAT.format(batchData.getEnrollmentEndDate), DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX)))
       ProjectCommonException.throwClientErrorException(ResponseCode.courseBatchEnrollmentDateEnded, ResponseCode.courseBatchEnrollmentDateEnded.getErrorMessage)

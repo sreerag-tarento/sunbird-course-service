@@ -3,13 +3,16 @@ package controllers;
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
+import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.request.Request;
+import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.keys.SunbirdKey;
 import play.mvc.Http;
 import play.mvc.Result;
 import util.Attrs;
 import util.ExtendedRequestValidator;
+import util.RequestInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -120,6 +123,44 @@ public class ExtendedLearnerController extends BaseController {
         }
     }
 
+    public CompletionStage<Result> getNgoContentState(Http.Request httpRequest) {
+        try {
+            String tokenUserId = RequestInterceptor.verifyRequestData(httpRequest);
+            if (JsonKey.UNAUTHORIZED.equalsIgnoreCase(tokenUserId)
+                    || JsonKey.ANONYMOUS.equalsIgnoreCase(tokenUserId)) {
+                throw new ProjectCommonException(
+                        ResponseCode.unAuthorized.getErrorCode(),
+                        ResponseCode.unAuthorized.getErrorMessage(),
+                        ResponseCode.UNAUTHORIZED.getResponseCode());
+            }
+
+            Map<String, Object> contextMap = new HashMap<>();
+            JsonNode requestJson = httpRequest.body().asJson();
+            Request request =
+                    createAndInitRequest("getConsumption", requestJson, httpRequest);
+
+            String requestBodyUserId = (String) request.getRequest().getOrDefault(JsonKey.USER_ID, null);
+            if (StringUtils.isNotBlank(requestBodyUserId) && !requestBodyUserId.equalsIgnoreCase(tokenUserId)) {
+                throw new ProjectCommonException(
+                        ResponseCode.unAuthorized.getErrorCode(),
+                        ResponseCode.unAuthorized.getErrorMessage(),
+                        ResponseCode.UNAUTHORIZED.getResponseCode());
+            }
+
+            request.getContext().put(JsonKey.REQUESTED_BY, tokenUserId);
+            request.getContext().put(JsonKey.REQUESTED_FOR, tokenUserId);
+            String userId = (String) request.getContext().getOrDefault(JsonKey.REQUESTED_FOR, request.getContext().get(JsonKey.REQUESTED_BY));
+            validator.validateRequestedBy(userId);
+            request.getRequest().put(JsonKey.USER_ID, userId);
+            validator.validateGetContentState(request);
+            request = transformUserId(request);
+            return actorResponseHandler(
+                    contentConsumptionActor, request, timeout, JsonKey.CONTENT_LIST, httpRequest);
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(createCommonExceptionResponse(e, httpRequest));
+        }
+    }
+
     public CompletionStage<Result> updateContentStateByAdmin(Http.Request httpRequest) {
         JsonNode requestData = httpRequest.body().asJson();
         String loggingHeaders =  httpRequest.attrs().getOptional(Attrs.X_LOGGING_HEADERS).orElse(null);
@@ -160,4 +201,58 @@ public class ExtendedLearnerController extends BaseController {
     }
 
 
+    public CompletionStage<Result> updateNgoContentState(Http.Request httpRequest) {
+        JsonNode requestData = httpRequest.body().asJson();
+        String loggingHeaders =  httpRequest.attrs().getOptional(Attrs.X_LOGGING_HEADERS).orElse(null);
+        String apiDebugLog = "UpdateNgoContentState Request: " + requestData.toString();
+        try {
+            String tokenUserId = RequestInterceptor.verifyRequestData(httpRequest);
+            if (JsonKey.UNAUTHORIZED.equalsIgnoreCase(tokenUserId)
+                    || JsonKey.ANONYMOUS.equalsIgnoreCase(tokenUserId)) {
+                throw new ProjectCommonException(
+                        ResponseCode.unAuthorized.getErrorCode(),
+                        ResponseCode.unAuthorized.getErrorMessage(),
+                        ResponseCode.UNAUTHORIZED.getResponseCode());
+            }
+
+            Request reqObj = (Request) mapper.RequestMapper.mapRequest(requestData, Request.class);
+            String requestedFor = (String) reqObj.getRequest().getOrDefault(JsonKey.USER_ID, null);
+
+            if (StringUtils.isNotBlank(requestedFor) && !requestedFor.equalsIgnoreCase(tokenUserId)) {
+                throw new ProjectCommonException(
+                        ResponseCode.unAuthorized.getErrorCode(),
+                        ResponseCode.unAuthorized.getErrorMessage(),
+                        ResponseCode.UNAUTHORIZED.getResponseCode());
+            }
+
+            ExtendedRequestValidator.validateUpdateContent(reqObj);
+            reqObj = transformUserId(reqObj);
+            reqObj.setOperation("updateConsumption");
+            reqObj.setRequestId(httpRequest.attrs().getOptional(Attrs.REQUEST_ID).orElse(null));
+            reqObj.setEnv(getEnvironment());
+            HashMap<String, Object> innerMap = new HashMap<>();
+            innerMap.put(JsonKey.REQUESTED_BY, tokenUserId);
+            if (StringUtils.isNotBlank(requestedFor))
+                innerMap.put(SunbirdKey.REQUESTED_FOR, requestedFor);
+            if(!reqObj.contains(JsonKey.CONTENTS) && !reqObj.contains(JsonKey.ASSESSMENT_EVENTS)) {
+                innerMap.put(JsonKey.COURSE_ID, reqObj.getOrDefault(JsonKey.COURSE_ID, ""));
+                innerMap.put(JsonKey.BATCH_ID, reqObj.getOrDefault(JsonKey.BATCH_ID, ""));
+            } else {
+                innerMap.put(JsonKey.CONTENTS, reqObj.get(JsonKey.CONTENTS));
+                innerMap.put(JsonKey.ASSESSMENT_EVENTS, reqObj.getRequest().get(JsonKey.ASSESSMENT_EVENTS));
+            }
+            innerMap.put(JsonKey.USER_ID, reqObj.getRequest().get(JsonKey.USER_ID));
+            reqObj.setRequest(innerMap);
+            CompletionStage<Result> result = actorResponseHandler(contentConsumptionActor, reqObj, timeout, null, httpRequest);
+            return result.thenApplyAsync(r -> {
+                logger.info(null,apiDebugLog + ":: ResponseStatus: " + r.status() + " Headers: " + loggingHeaders);
+                return r;
+            });
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(createCommonExceptionResponse(e, httpRequest)).thenApplyAsync(r -> {
+                logger.info(null,apiDebugLog + ":: ResponseStatus: " + r.status() + " Headers: " + loggingHeaders +  " ErrMessage: " + e.getMessage());
+                return r;
+            });
+        }
+    }
 }
