@@ -412,7 +412,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
     }
   }
 
-  def getEnrolmentList(request: Request, userId: String, isDetailsRequired: Boolean, isProgressEnabled: Boolean): Response = {
+  def getEnrolmentList(request: Request, userId: String, isDetailsRequired: Boolean, isProgressEnabled: Boolean, includeInactiveEnrolments: Boolean = false): Response = {
     try {
       logger.info(request.getRequestContext, "ExtendedCourseEnrollmentActor :: getEnrolmentList :: fetching data from cassandra with userId " + userId)
 
@@ -424,7 +424,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
       }
       val isUnenrolledRequest = status != null && status.exists(_.equalsIgnoreCase("Unenrolled"))
 
-      val activeEnrolments: java.util.List[java.util.Map[String, AnyRef]] = getActiveEnrollments(userId, request)
+      val activeEnrolments: java.util.List[java.util.Map[String, AnyRef]] = getActiveEnrollments(userId, request, includeInactiveEnrolments)
       var isMoreThanOneCourse: Boolean = false
       if (request.get(Constants.COURSE_ID) != null) {
         val courseIdListFromRequest = request.get(Constants.COURSE_ID).asInstanceOf[java.util.List[String]]
@@ -478,7 +478,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
     }
   }
 
-  def getActiveEnrollments(userId: String, request: Request): java.util.List[java.util.Map[String, AnyRef]] = {
+  def getActiveEnrollments(userId: String, request: Request, includeInactiveEnrolments: Boolean = false): java.util.List[java.util.Map[String, AnyRef]] = {
     isRetiredCoursesIncludedInEnrolList = if (request.get(JsonKey.RETIRED_COURE_ENABLED) != null)
       request.get(JsonKey.RETIRED_COURE_ENABLED).asInstanceOf[Boolean] else false
     val courseIdList:  java.util.List[String] = new java.util.ArrayList()
@@ -530,7 +530,9 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
           .asJava
 
       } else {
-        enrolments = enrolments.filter(e => e.getOrDefault(JsonKey.ACTIVE, false.asInstanceOf[AnyRef]).asInstanceOf[Boolean]).toList.asJava
+        if (!includeInactiveEnrolments) {
+          enrolments = enrolments.filter(e => e.getOrDefault(JsonKey.ACTIVE, false.asInstanceOf[AnyRef]).asInstanceOf[Boolean]).toList.asJava
+        }
         if (status != null && status.nonEmpty && status.exists(s => statusMap.contains(s))) {
           for (statusValue <- status) {
             if (statusMap.get(statusValue).contains(1)) {
@@ -1272,7 +1274,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
     val userId = request.get(JsonKey.USER_ID).asInstanceOf[String]
     logger.info(request.getRequestContext, "ExtendedCourseEnrollmentActor :: list :: UserId = " + userId)
     try {
-      val response = getEnrolmentList(request, userId, true, true)
+      val response = getEnrolmentList(request, userId, true, true, includeInactiveEnrolments = true)
       sender().tell(response, self)
     } catch {
       case e: Exception =>
