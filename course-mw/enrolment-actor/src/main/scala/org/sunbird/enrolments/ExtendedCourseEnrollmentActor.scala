@@ -19,7 +19,7 @@ import org.sunbird.learner.actors.course.dao.impl.ContentHierarchyDaoImpl
 import org.sunbird.learner.actors.coursebatch.dao.impl.{BatchUserDaoImpl, CourseBatchDaoImpl, UserCoursesDaoImpl}
 import org.sunbird.learner.actors.coursebatch.dao.{BatchUserDao, CourseBatchDao, UserCoursesDao}
 import org.sunbird.learner.actors.coursebatch.service.UserCoursesService
-import org.sunbird.learner.util.{BatchCacheHandlerV2, ContentCacheHandlerV2, ContentUtil, CourseBatchSchedulerUtil, ExtendedUtil, JsonUtil, Util}
+import org.sunbird.learner.util.{BatchCacheHandlerV2, ContentCacheHandlerV2, ContentUtil, CourseBatchSchedulerUtil, ExtendedUtil, HelperMethodService, JsonUtil, Util}
 import org.sunbird.models.batch.user.BatchUser
 import org.sunbird.models.course.batch.CourseBatch
 import org.sunbird.models.user.courses.UserCourses
@@ -1744,7 +1744,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
       cacheUtil.delete(getCacheKey(userId))
       sender().tell(successResponse(), self)
       generateTelemetryAudit(userId, courseId, batchId, data, "unenrol", JsonKey.UPDATE, request.getContext)
-      notifyUser(userId, batchData, JsonKey.REMOVE, "")
+      notifyUserInAppOnly(userId, batchData, "unenroll", request.getRequestContext)
       val topic = ProjectUtil.getConfigValue(JsonKey.DEV_USER_UNENROLMENT_EVENT_TOPIC)
       publishKarmaPointsReversalEvent(topic,userId,courseId,batchId,request.getRequestContext)
       cacheUtil.delete(getCacheBatchKey(batchId))
@@ -1908,7 +1908,7 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
       generateTelemetryAudit(userId, courseId, batchId, data, "reenrol", JsonKey.UPDATE, request.getContext)
 
       // Notification
-      notifyUser(userId, batchData, JsonKey.ADD, recentLang)
+      notifyUserInAppOnly(userId, batchData, "reenroll", request.getRequestContext)
       val dataMap = new java.util.HashMap[String, AnyRef]
       val requestMap = new java.util.HashMap[String, AnyRef]
       requestMap.put(JsonKey.COURSE_ID,courseId)
@@ -2053,5 +2053,44 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
     event.put(JsonKey.E_DATA, edata)
 
     InstructionEventGenerator.pushInstructionEvent(topic, event)
+  }
+
+  def notifyUserInAppOnly(userId: String, batchData: CourseBatch, actionType: String, requestContext: RequestContext): Unit = {
+    val isNotifyUser = java.lang.Boolean.parseBoolean(PropertiesCache.getInstance().getProperty(JsonKey.SUNBIRD_COURSE_UNENROLL_AND_REENROLL_NOTIFICATIONS_ENABLED))
+    if (isNotifyUser) {
+      try {
+        val subCategory = if (actionType.equalsIgnoreCase("reenroll")) {
+          JsonKey.ENROLLMENT_REENROLL
+        } else {
+          JsonKey.ENROLLMENT_UNENROLL
+        }
+        val placeholders = new java.util.HashMap[String, AnyRef]()
+        placeholders.put(JsonKey.COURSE_NAME, batchData.getName)
+
+        val data = new java.util.HashMap[String, AnyRef]()
+        data.put(JsonKey.COURSE_NAME, batchData.getName)
+        data.put(JsonKey.COURSE_ID, batchData.getCourseId)
+        data.put(JsonKey.BATCH_ID, batchData.getBatchId)
+
+        val message = new java.util.HashMap[String, AnyRef]()
+        message.put(JsonKey.DATA, data)
+        message.put(JsonKey.PLACE_HOLDERS, placeholders)
+
+        val helperMethodService = new HelperMethodService()
+        helperMethodService.sendNotification(
+          subCategory,
+          JsonKey.ALERT,
+          java.util.Arrays.asList(userId),
+          message
+        )
+
+        logger.info(requestContext,
+          s"notifyUserInAppOnly :: Sent $actionType in-app notification for userId=$userId, batchId=${batchData.getBatchId}")
+      } catch {
+        case e: Exception =>
+          logger.error(requestContext,
+            s"notifyUserInAppOnly :: Failed to send in-app notification: ${e.getMessage}", e)
+      }
+    }
   }
 }
