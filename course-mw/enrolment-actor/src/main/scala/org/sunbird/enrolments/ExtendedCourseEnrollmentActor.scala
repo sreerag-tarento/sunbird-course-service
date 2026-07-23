@@ -1935,14 +1935,6 @@ class ExtendedCourseEnrollmentActor @Inject()(@Named("course-batch-notification-
 
       // Notification
       notifyUserInAppOnly(userId, batchData, "reenroll", request.getRequestContext)
-      val dataMap = new java.util.HashMap[String, AnyRef]
-      val requestMap = new java.util.HashMap[String, AnyRef]
-      requestMap.put(JsonKey.COURSE_ID,courseId)
-      requestMap.put(JsonKey.USER_ID,userId)
-      requestMap.put(JsonKey.BATCH_ID,batchId)
-      dataMap.put(JsonKey.E_DATA,requestMap)
-      val topic = ProjectUtil.getConfigValue("kafka_user_enrolment_event_topic")
-      InstructionEventGenerator.createCourseEnrolmentEvent("", topic, dataMap)
 
     } else {
       ProjectCommonException.throwClientErrorException(
